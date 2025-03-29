@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Vault - Start</title>
+    <style>
+        body {
+            background-image: url('assets/background.jpg');
+            background-size: contain;
+            background-position: center;
+            background-repeat: repeat;
+            background-attachment: fixed;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            color: white;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            width: 80%;
+            max-width: 600px;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            color: #ffcc00;
+            margin-bottom: 20px;
+        }
+        ul {
+            text-align: left;
+            padding-left: 20px;
+            line-height: 1.6;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        button {
+            background: #ffcc00;
+            color: #000;
+            padding: 12px 25px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: #e6b800;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Chess Vault</h1>
+        <p><strong>Instructions:</strong></p>
+        <ul>
+            <li>Click to select a piece, then click where you want to move it</li>
+            <li>Use the 💡 icon to view all movement clues</li>
+            <li>When you submit, clues will turn <span style="color:#2e7d32">green</span> if correct or <span style="color:#c62828">red</span> if incorrect</li>
+            <li>All pieces must be correctly placed to unlock the reward</li>
+            <li>Your progress saves automatically between sessions</li>
+            <li>Use "Reset Game" if you need to start fresh</li>
+        </ul>
+        <button onclick="startGame()">Begin Challenge</button>
+    </div>
+
+    <script>
+    // Consistent session key with other pages
+    const SESSION_KEY = 'chessVaultSession';
+    
+    function startGame() {
+        // Renew session when starting game
+        localStorage.setItem(SESSION_KEY, 'active');
+        window.location.href = 'game.html';
+    }
+    
+    // Check for existing session on load
+    window.onload = function() {
+        // If coming from game page, don't clear session
+        if (!document.referrer.includes('game.html')) {
+            // If no active session, redirect to login
+            if (!localStorage.getItem(SESSION_KEY)) {
+                window.location.href = 'index.html';
+            }
+        }
+        
+        // Optional: Add a "Continue" button if existing game detected
+        if (localStorage.getItem('chessVaultGameState')) {
+            const container = document.querySelector('.container');
+            const continueBtn = document.createElement('button');
+            continueBtn.textContent = 'Continue Game';
+            continueBtn.style.marginTop = '10px';
+            continueBtn.style.background = '#4CAF50';
+            continueBtn.onclick = function() {
+                startGame();
+            };
+            container.insertBefore(continueBtn, container.lastElementChild);
+        }
+    };
+</script>
+</body>
+</html>

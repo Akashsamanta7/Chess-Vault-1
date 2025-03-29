@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Vault - Reward</title>
+    <style>
+        body {
+            background-image: url('assets/background.jpg');
+            background-size: contain;
+            background-position: center;
+            background-repeat: repeat;
+            background-attachment: fixed;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+        }
+        .reward-container {
+            background: rgba(0, 0, 0, 0.85);
+            padding: 30px;
+            border-radius: 15px;
+            width: 400px;
+            max-width: 90%;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        h2 {
+            margin: 0 0 20px 0;
+            color: #ffcc00;
+            font-size: 28px;
+        }
+        .trophy-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            color: #ffcc00;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-20px);}
+            60% {transform: translateY(-10px);}
+        }
+        .congrats-message {
+            font-size: 18px;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        .reward-code {
+            background: rgba(255, 204, 0, 0.2);
+            border: 2px dashed #ffcc00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 20px;
+            letter-spacing: 2px;
+            margin: 20px 0;
+            word-break: break-all;
+        }
+        .instructions {
+            font-size: 14px;
+            color: #aaa;
+            margin-top: 25px;
+            line-height: 1.4;
+        }
+        .btn-back {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #333;
+            color: #ffcc00;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+            text-decoration: none;
+        }
+        .btn-back:hover {
+            background: #444;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="reward-container">
+        <div class="trophy-icon">🏆</div>
+        <h2>Congratulations!</h2>
+        
+        <div class="congrats-message">
+            You've successfully conquered the Chess Vault!<br>
+            As a reward for your victory, please accept this gift:
+        </div>
+        
+        <div class="reward-code" id="redeem-code">
+            XXXX-XXXX-XXXX
+        </div>
+        
+        <div class="instructions">
+            This is your Google Play redeem code. Copy it and redeem it in the Google Play Store app.<br>
+            To redeem: Open Google Play → Menu → Redeem → Enter code → Enjoy your reward!
+        </div>
+        
+        <a href="start.html" class="btn-back">Back to Vault</a>
+    </div>
+
+<script>
+    // Storage key consistent with other pages
+    const SESSION_KEY = 'chessVaultSession';
+    
+    // Check if user is coming from a valid session
+    window.onload = function() {
+        const session = localStorage.getItem(SESSION_KEY);
+        if (session !== 'active') {
+            // Redirect to login if no active session
+            window.location.href = 'index.html';
+        }
+        
+        // Here you would typically fetch a real reward code from your server
+        // For now we'll just display a placeholder
+        // document.getElementById('redeem-code').textContent = 'XXXX-XXXX-XXXX';
+        
+        // Clear session when leaving reward page
+        window.addEventListener('beforeunload', function() {
+            localStorage.removeItem(SESSION_KEY);
+        });
+    };
+</script>
+</body>
+</html>

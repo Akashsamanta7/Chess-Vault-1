@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Vault - Login</title>
+    <style>
+        body {
+            background-image: url('assets/background.jpg');
+            background-size: contain;
+            background-position: center;
+            background-repeat: repeat;
+            background-attachment: fixed;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+        }
+        .login-container {
+            background: rgba(0, 0, 0, 0.85);
+            padding: 30px;
+            border-radius: 15px;
+            width: 350px;
+            max-width: 90%;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        h2 {
+            margin: 0 0 25px 0;
+            color: #ffcc00;
+            font-size: 28px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #444;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            transition: all 0.3s;
+            box-sizing: border-box;
+        }
+        input:focus {
+            outline: none;
+            border-color: #ffcc00;
+            background: white;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #555;
+            font-size: 18px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #ffcc00;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #e6b800;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .error-message {
+            color: #ff4444;
+            margin: 15px 0 0 0;
+            font-size: 14px;
+            min-height: 20px;
+            display: none;
+        }
+        .credentials-hint {
+            font-size: 12px;
+            margin-top: 20px;
+            color: #aaa;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Chess Vault</h2>
+        
+        <div class="input-group">
+            <input type="text" id="username" placeholder="Username" autocomplete="off" required>
+        </div>
+        
+        <div class="input-group">
+            <input type="password" id="password" placeholder="Password" autocomplete="off" required>
+            <span class="toggle-password" onclick="togglePassword()">👁️</span>
+        </div>
+        
+        <button onclick="validateLogin()">Enter the Vault</button>
+        <p class="error-message" id="error-msg"></p>
+        
+        </div>
+
+<script>
+    // Storage key consistent with other pages
+    const SESSION_KEY = 'chessVaultSession';
+    
+    function togglePassword() {
+        const passwordField = document.getElementById("password");
+        const toggleIcon = document.querySelector(".toggle-password");
+        
+        if (passwordField.type === "password") {
+            passwordField.type = "text";
+            toggleIcon.textContent = "👁️";
+        } else {
+            passwordField.type = "password";
+            toggleIcon.textContent = "👁️";
+        }
+    }
+
+    function validateLogin() {
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value;
+        const errorMsg = document.getElementById("error-msg");
+        
+        // Clear previous error
+        errorMsg.style.display = "none";
+        
+        // Simple validation - in production use proper authentication
+        if (username === "Random" && password === "qwerty123") {
+            // Set session flag before redirect
+            localStorage.setItem(SESSION_KEY, 'active');
+            window.location.href = "start.html";
+        } else {
+            errorMsg.textContent = "Invalid credentials. Please try again.";
+            errorMsg.style.display = "block";
+            // Small vibration effect for wrong credentials
+            document.querySelector('.login-container').animate([
+                { transform: 'translateX(0)' },
+                { transform: 'translateX(-5px)' },
+                { transform: 'translateX(5px)' },
+                { transform: 'translateX(0)' }
+            ], {
+                duration: 300,
+                iterations: 1
+            });
+        }
+    }
+    
+    // Handle Enter key press
+    document.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            validateLogin();
+        }
+    });
+    
+    // Focus username field on load
+    window.onload = function() {
+        // Clear any existing session if coming directly to login
+        if (!document.referrer.includes('start.html') && !document.referrer.includes('game.html')) {
+            localStorage.removeItem(SESSION_KEY);
+        }
+        document.getElementById("username").focus();
+    };
+</script>
+</body>
+</html>
