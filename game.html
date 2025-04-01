@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Vault</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-image: url('/Chess-Vault-1/assets/Background.jpg');
+            background-size: contain;
+            background-position: center;
+            background-repeat: repeat;
+            background-attachment: fixed;
+        }
+
+        .game-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            width: 90%;
+            max-width: 800px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .header {
+            color: #333;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.7);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .chess-board {
+            border-spacing: 0;
+            border-collapse: collapse;
+            margin: 0 auto;
+            border: 2px solid #333;
+        }
+
+        .chess-board th {
+            padding: 0.5em;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        .chess-board td {
+            border: 1px solid #333;
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            font-size: 36px;
+            line-height: 0;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .chess-board .light {
+            background: #f0d9b5;
+        }
+
+        .chess-board .dark {
+            background: #b58863;
+        }
+
+        .chess-board .selected {
+            box-shadow: inset 0 0 10px yellow;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 20px;
+            max-width: 500px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #submitBtn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        #submitBtn:hover {
+            background-color: #45a049;
+        }
+
+        #resetBtn {
+            background-color: #f44336;
+            color: white;
+        }
+
+        #resetBtn:hover {
+            background-color: #d32f2f;
+        }
+
+        .hint-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 30px;
+            cursor: pointer;
+            color: #333;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .clues-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            overflow-y: auto;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .clues-content {
+            background-color: #222;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 30px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .clue-item {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #222;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 100;
+            display: none;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+        }
+
+        .correct {
+            background-color: #2e7d32 !important;
+        }
+
+        .incorrect {
+            background-color: #c62828 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="header">Chess Vault</h1>
+        <div class="hint-icon" id="hintIcon">💡</div>
+        <table class="chess-board" id="board"></table>
+        
+        <div class="controls">
+            <button id="resetBtn">Reset Game</button>
+            <button id="submitBtn">Submit</button>
+        </div>
+    </div>
+
+    <div class="clues-modal" id="cluesModal">
+        <span class="close-modal" id="closeModal">&times;</span>
+        <div class="clues-content">
+            <h2>Chess Move Clues</h2>
+            <div id="cluesList"></div>
+        </div>
+    </div>
+
+    <div class="message-box" id="messageBox">
+        <p id="messageText">Check all your pieces. Try to solve the clues once again!</p>
+        <button id="closeMessage">Close</button>
+    </div>
+
+    <audio id="moveSound" src="/Chess-Vault-1/assets/chess-piece-move.mp3" preload="auto"></audio>
+
+<script>
+    // Game state
+    const gameState = {
+        pieces: {},
+        selectedSquare: null,
+        currentClues: [],
+        moveHistory: []
+    };
+
+    // Storage keys
+    const STORAGE_KEY = 'chessVaultGameState';
+    const SESSION_KEY = 'chessVaultSession';
+
+    // Unicode chess pieces
+    const pieces = {
+        'wK': '♔', 'wQ': '♕', 'wR': '♖', 'wB': '♗', 'wN': '♘', 'wP': '♙',
+        'bK': '♚', 'bQ': '♛', 'bR': '♜', 'bB': '♝', 'bN': '♞', 'bP': '♟'
+    };
+
+    // Initial position - object format for reliability
+    const initialPosition = {
+        'a1': 'wR', 'b1': 'wN', 'c1': 'wB', 'd1': 'wQ', 'e1': 'wK', 'f1': 'wB', 'g1': 'wN', 'h1': 'wR',
+        'a2': 'wP', 'b2': 'wP', 'c2': 'wP', 'd2': 'wP', 'e2': 'wP', 'f2': 'wP', 'g2': 'wP', 'h2': 'wP',
+        'a7': 'bP', 'b7': 'bP', 'c7': 'bP', 'd7': 'bP', 'e7': 'bP', 'f7': 'bP', 'g7': 'bP', 'h7': 'bP',
+        'a8': 'bR', 'b8': 'bN', 'c8': 'bB', 'd8': 'bQ', 'e8': 'bK', 'f8': 'bB', 'g8': 'bN', 'h8': 'bR'
+    };
+
+    // Updated clues (26 riddles with same solutions)
+    const clues = [
+        "The white horse beside the king leaps forward in an L-shape—two squares ahead, then one to the left.",  // G1→F3
+        "The white foot soldier above king charges forward two steps, asserting control.",  // E2→E4
+        "Black solider mirrors last white's movement.",  // E7→E5
+        "The white horse on the queen's wing springs towards the 2 places above the king's horse initial position.",  // B1→H3
+        "The black horse beside the king descends in a reverse L—two squares down, then one to the left.",  // G8→F6
+        "A black foot soldier moved like horse—two squares down, then one to the right.",  // F7→G5
+        "The white archer slides diagonally from the king's flank, moves 2 step above the white archer in queen's flank.",  // F1→C4
+        "The black archer streaks diagonally, pinning the above square of the white archers.",  // F8→C5
+        "The white queen strikes in, delivering a fatal blow attacking the black king in a left diagonal move.",  // D1→F7
+        "The black king sidesteps once to right cautiously, fleeing the enemy's wrath.",  // E8→F8
+        "The white pawn above the initial position of white archer in kings flank advances two steps boldly, ignoring the danger ahead.",  // F2→F4
+        "The black pawn above the initial position of black queen advances one step ahead.",  // D7→D6
+        "The white pawn on the queen's wing above initial position of horse moves one step forward, securing space.",  // B2→B3
+        "The black archer attacks diagonally, threatening the white king, where he rests 2 steps above the horse in kings wing.",  // C8→G4
+        "The white pawn above the horse in kings flank, takes a modest step, and steps one step forward.",  // G2→G3
+        "The black queen steps one move forward, saving the area.",  // D8→D7
+        "The white king moves beside the rooks in his flank for safety.",  // E1→G1 (castling)
+        "The black rook glides in the initial position of their queen, eyeing the enemy's weakened diagonal.",  // A8→D8
+        "The white pawn on the edge of kings flank storms forward 2 steps, aiming for promotion.",  // H2→H4
+        "The black pawn on the opposite takes a rebellious step and moves one step forward, blocking the enemy's advance.",  // H7→H6
+        "The white corner rook on kings flank took one step forward, preparing to join the battle.",  // H1→H2
+        "The white corner rook on queens flank took two steps forward, preparing to join the battle.",  // A1→A3
+        "The white bishop emerges from its nest, moves to 3rd line diagonally towards right, eyeing the enemy's dark squares.",  // C1→E3
+        "The white pawn above the initial position of the white archer in queens flank moves one step forward, supporting the center.",  // C2→C3
+        "The black pawn on the queen's flank above horse steps one step forward, preparing for a counterattack.",  // B7→B6
+        "The black horse on the queen's wing retreats to a defensive outpost, moves two step forward and one step on left sideway."  // B8→A6
+    ];
+
+    // Initialize the game
+    function initGame() {
+        if (!localStorage.getItem(SESSION_KEY)) {
+            window.location.href = 'index.html';
+            return;
+        }
+        createBoard();
+        initCluesModal();
+    }
+
+    // Create board with all pieces
+    function createBoard() {
+        const board = document.getElementById('board');
+        board.innerHTML = '';
+        
+        // Load saved state or use initial position
+        const savedState = localStorage.getItem(STORAGE_KEY);
+        const currentPosition = savedState ? JSON.parse(savedState).pieces : {...initialPosition};
+        
+        // Add column labels
+        const topRow = document.createElement('tr');
+        topRow.appendChild(document.createElement('th'));
+        for (let i = 0; i < 8; i++) {
+            const th = document.createElement('th');
+            th.textContent = String.fromCharCode(97 + i);
+            topRow.appendChild(th);
+        }
+        board.appendChild(topRow);
+        
+        // Create board squares (from rank 8 down to 1)
+        for (let row = 8; row >= 1; row--) {
+            const tr = document.createElement('tr');
+            
+            // Add row label
+            const th = document.createElement('th');
+            th.textContent = row;
+            tr.appendChild(th);
+            
+            for (let col = 0; col < 8; col++) {
+                const file = String.fromCharCode(97 + col);
+                const squareId = file + row;
+                const td = document.createElement('td');
+                td.className = (row + col) % 2 === 0 ? 'light' : 'dark';
+                td.id = squareId;
+                
+                // Place piece if exists in current position
+                if (currentPosition[squareId]) {
+                    const piece = document.createElement('span');
+                    piece.textContent = pieces[currentPosition[squareId]];
+                    piece.dataset.piece = currentPosition[squareId];
+                    td.appendChild(piece);
+                    gameState.pieces[squareId] = currentPosition[squareId];
+                }
+                
+                td.addEventListener('click', () => handleSquareClick(squareId));
+                tr.appendChild(td);
+            }
+            board.appendChild(tr);
+        }
+    }
+
+    // Handle square clicks
+    function handleSquareClick(squareId) {
+        const square = document.getElementById(squareId);
+        const moveSound = document.getElementById('moveSound');
+        
+        // If clicking on a piece to select it
+        if (square.querySelector('span') && !gameState.selectedSquare) {
+            // Deselect any currently selected piece
+            if (gameState.selectedSquare) {
+                document.getElementById(gameState.selectedSquare).classList.remove('selected');
+            }
+            
+            // Select new piece
+            square.classList.add('selected');
+            gameState.selectedSquare = squareId;
+        } 
+        // If we have a selected piece and are clicking on a target square
+        else if (gameState.selectedSquare && gameState.selectedSquare !== squareId) {
+            const selectedSquare = document.getElementById(gameState.selectedSquare);
+            const piece = selectedSquare.querySelector('span');
+            
+            // Only allow moving to empty squares
+            if (piece && !square.querySelector('span')) {
+                // Record move
+                gameState.moveHistory.push({
+                    from: gameState.selectedSquare,
+                    to: squareId,
+                    piece: piece.dataset.piece,
+                    timestamp: new Date().toISOString()
+                });
+                
+                // Play move sound
+                moveSound.currentTime = 0;
+                moveSound.play();
+                
+                // Move the piece
+                square.innerHTML = '';
+                const newPiece = document.createElement('span');
+                newPiece.textContent = piece.textContent;
+                newPiece.dataset.piece = piece.dataset.piece;
+                square.appendChild(newPiece);
+                
+                // Remove from old square
+                selectedSquare.innerHTML = '';
+                
+                // Update game state
+                gameState.pieces[squareId] = piece.dataset.piece;
+                delete gameState.pieces[gameState.selectedSquare];
+                
+                // Save game state
+                saveGameState();
+            }
+            
+            // Reset selection
+            selectedSquare.classList.remove('selected');
+            gameState.selectedSquare = null;
+        }
+        // Deselect if clicking the selected piece again
+        else if (gameState.selectedSquare === squareId) {
+            square.classList.remove('selected');
+            gameState.selectedSquare = null;
+        }
+    }
+
+    // Save game state
+    function saveGameState() {
+        const saveData = {
+            pieces: gameState.pieces,
+            clues: gameState.currentClues.map(c => c.textContent),
+            moveHistory: gameState.moveHistory,
+            lastUpdated: new Date().toISOString()
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
+        localStorage.setItem(SESSION_KEY, 'active');
+    }
+
+    // Initialize clues modal
+    function initCluesModal() {
+        const cluesList = document.getElementById('cluesList');
+        cluesList.innerHTML = '';
+        
+        const container = document.createElement('div');
+        container.style.maxHeight = '65vh';
+        container.style.overflowY = 'auto';
+        container.style.paddingRight = '10px';
+        
+        clues.forEach((clue, index) => {
+            const clueItem = document.createElement('div');
+            clueItem.className = 'clue-item';
+            clueItem.id = `clue-${index}`;
+            clueItem.textContent = `${index + 1}. ${clue}`;
+            clueItem.style.marginBottom = '10px';
+            clueItem.style.padding = '8px';
+            container.appendChild(clueItem);
+            gameState.currentClues.push(clueItem);
+        });
+        
+        cluesList.appendChild(container);
+    }
+
+    // Validate the board against clues
+    function validateBoard() {
+        const expectedMoves = parseClues();
+        let allCorrect = true;
+        
+        // Reset all clue colors
+        gameState.currentClues.forEach(clue => {
+            clue.style.backgroundColor = 'transparent';
+            clue.style.color = 'white';
+        });
+        
+        // Check each expected move
+        for (const [from, move] of Object.entries(expectedMoves)) {
+            const clueItem = document.getElementById(`clue-${move.clueIndex}`);
+            
+            if (gameState.pieces[move.to] === move.piece) {
+                clueItem.style.backgroundColor = '#2e7d32';
+            } else {
+                clueItem.style.backgroundColor = '#c62828';
+                allCorrect = false;
+            }
+        }
+        
+        return allCorrect;
+    }
+
+    // Parse clues into expected moves
+    function parseClues() {
+        const expectedMoves = {};
+        const solutions = [
+            { from: 'g1', to: 'f3', piece: 'wN' }, // 1
+            { from: 'e2', to: 'e4', piece: 'wP' }, // 2
+            { from: 'e7', to: 'e5', piece: 'bP' }, // 3
+            { from: 'b1', to: 'h3', piece: 'wN' }, // 4
+            { from: 'g8', to: 'f6', piece: 'bN' }, // 5
+            { from: 'f7', to: 'g5', piece: 'bP' }, // 6
+            { from: 'f1', to: 'c4', piece: 'wB' }, // 7
+            { from: 'f8', to: 'c5', piece: 'bB' }, // 8
+            { from: 'd1', to: 'f7', piece: 'wQ' }, // 9
+            { from: 'e8', to: 'f8', piece: 'bK' }, // 10
+            { from: 'f2', to: 'f4', piece: 'wP' }, // 11
+            { from: 'd7', to: 'd6', piece: 'bP' }, // 12
+            { from: 'b2', to: 'b3', piece: 'wP' }, // 13
+            { from: 'c8', to: 'g4', piece: 'bB' }, // 14
+            { from: 'g2', to: 'g3', piece: 'wP' }, // 15
+            { from: 'd8', to: 'd7', piece: 'bQ' }, // 16
+            { from: 'e1', to: 'g1', piece: 'wK' }, // 17
+            { from: 'a8', to: 'd8', piece: 'bR' }, // 18
+            { from: 'h2', to: 'h4', piece: 'wP' }, // 19
+            { from: 'h7', to: 'h6', piece: 'bP' }, // 20
+            { from: 'h1', to: 'h2', piece: 'wR' }, // 21
+            { from: 'a1', to: 'a3', piece: 'wR' }, // 22
+            { from: 'c1', to: 'e3', piece: 'wB' }, // 23
+            { from: 'c2', to: 'c3', piece: 'wP' }, // 24
+            { from: 'b7', to: 'b6', piece: 'bP' }, // 25
+            { from: 'b8', to: 'a6', piece: 'bN' }  // 26
+        ];
+
+        clues.forEach((_, index) => {
+            const move = solutions[index];
+            expectedMoves[move.from] = {
+                piece: move.piece,
+                to: move.to,
+                clueIndex: index
+            };
+        });
+        return expectedMoves;
+    }
+
+    // Show message box
+    function showMessage(message) {
+        document.getElementById('messageText').textContent = message;
+        document.getElementById('messageBox').style.display = 'block';
+    }
+
+    // Close message box
+    function closeMessage() {
+        document.getElementById('messageBox').style.display = 'none';
+    }
+
+    // Custom reset confirmation
+    function showResetConfirmation() {
+        const confirmBox = document.createElement('div');
+        confirmBox.id = 'resetConfirmBox';
+        confirmBox.style.position = 'fixed';
+        confirmBox.style.top = '50%';
+        confirmBox.style.left = '50%';
+        confirmBox.style.transform = 'translate(-50%, -50%)';
+        confirmBox.style.backgroundColor = '#222';
+        confirmBox.style.color = 'white';
+        confirmBox.style.padding = '20px';
+        confirmBox.style.borderRadius = '10px';
+        confirmBox.style.zIndex = '200';
+        confirmBox.style.textAlign = 'center';
+        confirmBox.style.boxShadow = '0 0 20px rgba(0,0,0,0.7)';
+        confirmBox.style.width = '300px';
+        
+        confirmBox.innerHTML = `
+            <h3 style="margin-top:0">Reset Game</h3>
+            <p>Are you sure you want to reset?</p>
+            <p>All progress will be lost.</p>
+            <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px;">
+                <button id="confirmReset" style="padding: 8px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">Yes</button>
+                <button id="cancelReset" style="padding: 8px 20px; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer;">No</button>
+            </div>
+        `;
+        
+        document.body.appendChild(confirmBox);
+        
+        document.getElementById('confirmReset').addEventListener('click', performReset);
+        document.getElementById('cancelReset').addEventListener('click', () => {
+            document.body.removeChild(confirmBox);
+        });
+    }
+
+    // Perform the actual reset
+    function performReset() {
+        const confirmBox = document.getElementById('resetConfirmBox');
+        if (confirmBox) {
+            document.body.removeChild(confirmBox);
+        }
+        
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(SESSION_KEY);
+        gameState.pieces = {};
+        gameState.selectedSquare = null;
+        gameState.moveHistory = [];
+        createBoard();
+        
+        gameState.currentClues.forEach(clue => {
+            clue.style.backgroundColor = 'transparent';
+            clue.style.color = 'white';
+        });
+    }
+
+    // Reset the game (now with custom confirmation)
+    function resetGame() {
+        showResetConfirmation();
+    }
+
+    // Event listeners
+    document.getElementById('hintIcon').addEventListener('click', () => {
+        document.getElementById('cluesModal').style.display = 'flex';
+    });
+
+    document.getElementById('closeModal').addEventListener('click', () => {
+        document.getElementById('cluesModal').style.display = 'none';
+    });
+
+    document.getElementById('submitBtn').addEventListener('click', () => {
+        const allCorrect = validateBoard();
+        
+        if (allCorrect) {
+            localStorage.removeItem(STORAGE_KEY);
+            setTimeout(() => {
+                window.location.href = 'reward.html';
+            }, 1000);
+        } else {
+            showMessage("Check all your pieces. Try to solve the clues once again!");
+        }
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', resetGame);
+    document.getElementById('closeMessage').addEventListener('click', closeMessage);
+
+    // Initialize the game when DOM loads
+    document.addEventListener('DOMContentLoaded', initGame);
+</script>
+</body>
+</html>
